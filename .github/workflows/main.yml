@@ -3,7 +3,7 @@ name: Deploy PHP Application
 on:
   push:
     branches:
-      - master  
+      - main  # Change this to your main branch name
 
 jobs:
   deploy:
@@ -25,4 +25,4 @@ jobs:
       # Deploy the application to the Ubuntu server using SCP
       - name: Deploy to Ubuntu Server
         run: |
-          scp -r -o StrictHostKeyChecking=no ./ ubuntu@43.205.240.212:/var/www/html
+          scp -r -o StrictHostKeyChecking=no ./ ubuntu@43.205.240.212:/var/www/html/
