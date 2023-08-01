@@ -25,4 +25,4 @@ jobs:
       # Deploy the application to the Ubuntu server using SCP
       - name: Deploy to Ubuntu Server
         run: |
-          scp -r -o StrictHostKeyChecking=no ./ ubuntu@43.205.240.212:/var/www/html/
+          scp -r -o StrictHostKeyChecking=no ${{ github.workspace }} ubuntu@43.205.240.212:/var/www/html/
