@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deploy to Ubuntu Server
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code to the runner
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Deploy the application to the Ubuntu server using SSH
+      - name: Deploy to Ubuntu Server
+        uses: appleboy/scp-action@master
+        with:
+          host: 43.205.240.212
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: .  
+          target: /var/www/html  
+
+      # Optional: Run any tests or additional steps after deployment (e.g., PHPUnit tests)
+      - name: Run PHPUnit tests
+        run: phpunit
+
