@@ -36,7 +36,7 @@ pipeline {
 
                 script {
 
-                    withAWS(region: AWS_REGION, credentials: 'AWS-ARN') {
+                    withAWS(region: AWS_REGION, credentials: 'jenkins-practice-role') {
 
                         sh "eb use $ELASTIC_BEANSTALK_ENV_NAME"
 
