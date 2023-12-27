@@ -15,7 +15,7 @@ pipeline {
             steps {
                 script {
                     // Assuming the 'index.php' directory is in the workspace
-                    sh "cd index.php && zip -r ${BuildName}.zip *"
+                    sh "cd yash.php && zip -r ${BuildName}.zip *"
                 }
             }
         }
