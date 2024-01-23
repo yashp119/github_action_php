@@ -48,7 +48,11 @@ jobs:
 
       - name: Convert SonarQube JSON to HTML
         run: |
-          cat sonarqube-issues.json | jq -r '.issues | map("<p>Issue: \(.message)</p><p>Severity: \(.severity)</p><p>Component: \(.component)</p><p>Rule: \(.rule)</p>") | join("")' > sonarqube-issues.html
+          cat sonarqube-issues.json | jq -r '["Key", "Rule", "Severity", "Component", "Project"], (.issues[] | [.key, .rule, .severity, .component, .project]) | @csv' > sonarqube-issues.csv
+          sed -i 's/,/<\/td><td>/g; s/^/<tr><td>/; s/$/<\/td><\/tr>/' sonarqube-issues.csv
+          echo '<table border="1">' > sonarqube-issues.html
+          cat sonarqube-issues.csv >> sonarqube-issues.html
+          echo '</table>' >> sonarqube-issues.html
 
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
