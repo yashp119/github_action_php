@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and SonarQube Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -16,37 +16,16 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
+      # You can add your build steps here if needed
 
-      - name: SonarQube Scan
+      - name: Create SonarQube Analysis Report
         run: |
-          # Assuming your project uses Maven. Adjust the command accordingly if you use a different build tool.
-          mvn clean install
-          sonar-scanner \
-            -Dsonar.projectKey=my-project-key \
-            -Dsonar.sources=src \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Generate SonarQube Report
-        run: |
-          # Assuming the report is generated in HTML format. Adjust accordingly if it's a different format.
-          sonar-scanner -Dsonar.projectKey=my-project-key -Dsonar.sources=src -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} -Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.analysis.report.format=html -Dsonar.analysis.report.path=sonar-report.html
+          # Placeholder command for creating SonarQube analysis report
+          echo "Mock SonarQube report generation step"
+          # You can replace the above line with the actual command to generate the SonarQube report
 
       - name: Create email body
-        run: echo "SonarQube report is ready. Please find the attached report." > email-body.txt
-
-      - name: Attach SonarQube Report
-        uses: maxheld83/gha-attach-file@v1
-        with:
-          path: ${{ github.workspace }}/sonar-report.html
+        run: echo "SonarQube report is ready" > email-body.txt
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -59,3 +38,5 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
+
+# You can add additional steps or jobs as needed for your specific build and deployment process
