@@ -15,12 +15,6 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Create .scannerwork directory
-        run: mkdir -p $GITHUB_WORKSPACE/.scannerwork
-
-      - name: Set Permissions for .scannerwork
-        run: chmod -R 777 $GITHUB_WORKSPACE/.scannerwork
-
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
@@ -32,7 +26,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: .scannerwork/
+          path: $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Print Artifact Directory
         run: ls -R $GITHUB_WORKSPACE/.scannerwork/
@@ -44,7 +38,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: .scannerwork/
+          path: $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
