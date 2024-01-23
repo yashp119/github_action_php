@@ -3,7 +3,7 @@ name: Scan and Notify
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   scan-and-notify:
