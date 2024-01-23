@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
@@ -50,11 +50,11 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: yashpareek.amy119@gmail.com
-          password: seoa fhxg bmcg edqj
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
           subject: SonarQube Report
           body: email-body.txt
-          to: yashpareek.amy119@gmail.com,niharika.kadellabs@gmail.com
-          from: yashpareek.amy119@gmail.com
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
           attachments: sonarqube-issues.json
           content_type: application/json
