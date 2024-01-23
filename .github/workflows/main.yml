@@ -23,16 +23,16 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Print SonarQube Directory Contents
-        run: ls -R /opt/sonarqube/data/governance/
+        run: ls -R /path/to/sonarqube/directory/
 
       - name: Upload SonarQube Report
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          path: /path/to/sonarqube/directory/project_dumps/export/testing-sonar.zip
 
       - name: Print Artifact Directory
-        run: ls -R /opt/sonarqube/data/governance/project_dumps/export/
+        run: ls -R /path/to/sonarqube/directory/project_dumps/export/
 
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
@@ -41,7 +41,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          path: /path/to/sonarqube/directory/project_dumps/export/testing-sonar.zip
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -54,4 +54,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          attachments: /path/to/sonarqube/directory/project_dumps/export/testing-sonar.zip
