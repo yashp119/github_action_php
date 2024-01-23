@@ -13,22 +13,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
-
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Upload SonarQube Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: sonarqube-report
-          path: .scannerwork/report-task.txt
+      # Your existing build steps...
 
   main:
     name: Create PR Release to Main
@@ -59,30 +44,4 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download SonarQube Report Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: sonarqube-report
-
-      - name: Fetch SonarQube Issues
-        run: |
-          curl -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
-            -o sonarqube-issues.json
-
-      - name: Send SonarQube Report via Email
-        uses: dawidd6/action-send-mail@v2
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: SonarQube Report
-          body: email-body.txt
-          to: ${{ secrets.EMAIL_TO }}
-          from: ${{ secrets.EMAIL_FROM }}
-          attachments: sonarqube-issues.json
-          content_type: application/json
+      # Your existing email steps...
