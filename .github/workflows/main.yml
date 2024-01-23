@@ -21,6 +21,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
+      - name: Print SonarQube Directory Contents
+        run: ls -R /opt/sonarqube/data/governance/
+
       - name: Upload SonarQube Report
         uses: actions/upload-artifact@v2
         with:
