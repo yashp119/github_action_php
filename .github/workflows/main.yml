@@ -1,4 +1,4 @@
-name: Build and SonarQube Scan
+name: Scan and Notify
 
 on:
   push:
@@ -6,46 +6,29 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build
+  scan-and-notify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    - name: Set up SonarQube
+      uses: sonarsource/sonarqube-scan-action@v3
+      with:
+        token: ${{ secrets.SONAR_TOKEN }}
+        scannerVersion: '4.0.0'
 
-      - name: Print SonarQube Directory Contents
-        run: ls -R /opt/sonarqube/data/
+    - name: Send email notification
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.GMAIL_USERNAME }}
+        password: ${{ secrets.GMAIL_PASSWORD }}
+        subject: 'SonarQube Scan Results'
+        to: 'niharika.kadellabs@gmail.com'
+        body: |
+          The SonarQube scan has been completed.
 
-      - name: Upload SonarQube Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: sonarqube-report
-          path: /opt/sonarqube/data/
-
-      - name: Print Artifact Directory
-        run: ls -R /opt/sonarqube/data/
-
-      - name: Create email body
-        run: echo "SonarQube report is attached" > email-body.txt
-
-      - name: Send Email
-        uses: dawidd6/action-send-mail@v2
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.GMAIL_USER }}
-          password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: SonarQube Report
-          body: email-body.txt
-          to: niharika.kadellabs@gmail.com
-          from: ${{ secrets.GMAIL_USER }}
-          attachments: /opt/sonarqube/data/
+          Check the results here: http://3.82.235.235:9000/project/activity?id=testing-sonar
