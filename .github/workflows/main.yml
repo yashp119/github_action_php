@@ -7,27 +7,28 @@ on:
 
 jobs:
   build:
-    name: Build and SonarQube Scan
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Build and Test
-        run: |
-          # Replace this command with the actual build and test command for your project
-          mvn clean install
-
       - name: SonarQube Scan
-        run: |
-          # Replace this command with the actual SonarQube scan command for your project
-          sonar-scanner -Dsonar.projectKey=testing-sonar -Dsonar.sources=.
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Create email body
-        run: echo "SonarQube report is ready" > email-body.txt
+        run: echo "SonarQube report is attached" > email-body.txt
+
+      - name: Download SonarQube analysis report
+        uses: actions/download-artifact@v2
+        with:
+          name: sonarqube-report
+          path: sonarqube-report
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -40,3 +41,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
+          attachments: sonarqube-report/report-task.txt
