@@ -33,12 +33,13 @@ jobs:
           echo "tls_starttls on" >> ~/.msmtprc
           echo "tls_trust_file /etc/ssl/certs/ca-certificates.crt" >> ~/.msmtprc
           echo "logfile ~/.msmtp.log" >> ~/.msmtprc
-          echo "account default" >> ~/.msmtprc
+          echo "account gmail" >> ~/.msmtprc
           echo "host smtp.gmail.com" >> ~/.msmtprc
           echo "port 587" >> ~/.msmtprc
           echo "from $GMAIL_USER" >> ~/.msmtprc
           echo "user $GMAIL_USER" >> ~/.msmtprc
           echo "password $GMAIL_APP_PASSWORD" >> ~/.msmtprc
+          echo "account default : gmail" >> ~/.msmtprc
           chmod 600 ~/.msmtprc
 
       # Send an email using msmtp
