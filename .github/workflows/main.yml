@@ -47,6 +47,6 @@ jobs:
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
           subject: SonarQube Report
           body: email-body.txt
-          to: yashpareek.amy119@gmail.com
+          to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
           attachments: downloaded-artifacts/*
