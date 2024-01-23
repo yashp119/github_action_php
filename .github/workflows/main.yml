@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "Subject: SonarQube Report" > email.txt
           echo "SonarQube report is ready" >> email.txt
-          msmtp -a default -t yashpareek.amy119@gmail.com
+          msmtp -t yashpareek.amy119@gmail.com
         env:
           GMAIL_USER: yashpareek.amy119@gmail.com
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
