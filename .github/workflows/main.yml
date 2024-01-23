@@ -28,7 +28,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: sonarqube-report
+          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
