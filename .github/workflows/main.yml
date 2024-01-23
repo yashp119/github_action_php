@@ -47,5 +47,5 @@ jobs:
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
           subject: SonarQube Report
           body: 'Please find the SonarQube Analysis report attached.'
-          to: 'niharika.kadellabs@gmail.com,surajy545@gmail.com,tripathiniharika466@gmail.com'
+          to: 'niharika.kadellabs@gmail.com'
           attachments: sonar-analysis-report.html
