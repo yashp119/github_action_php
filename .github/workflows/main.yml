@@ -26,19 +26,19 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE/.scannerwork/
+          path: $GITHUB_WORKSPACE
 
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
 
       - name: Print Artifact Directory
-        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
+        run: ls -R $GITHUB_WORKSPACE
 
       - name: Download SonarQube analysis report
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE/.scannerwork/
+          path: $GITHUB_WORKSPACE
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -51,4 +51,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: $GITHUB_WORKSPACE/.scannerwork/
+          attachments: $GITHUB_WORKSPACE/
