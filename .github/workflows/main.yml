@@ -36,6 +36,9 @@ jobs:
     needs: build
     if: ${{ needs.build.result == 'success' }}
     steps:
+      - name: Placeholder Step
+        run: echo "Placeholder step to satisfy GitHub Actions requirements"
+
       - name: git checkout
         uses: actions/checkout@v3
         with:
