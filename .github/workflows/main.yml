@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
@@ -26,32 +24,16 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE
+          path: .scannerwork
 
-      - name: Create email body
-        run: echo "SonarQube report is attached" > email-body.txt
-
-      - name: Print Artifact Directory
-        run: ls -R $GITHUB_WORKSPACE
-
-      - name: Download SonarQube analysis report
+      - name: Download SonarQube Report
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE/downloaded-artifacts
+          path: downloaded-artifacts
 
-      - name: Print Downloaded Artifact Directory
-        run: ls -R $GITHUB_WORKSPACE/downloaded-artifacts
+      - name: List Downloaded Files
+        run: ls -R downloaded-artifacts
 
-      - name: Send Email
-        uses: dawidd6/action-send-mail@v2
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.GMAIL_USER }}
-          password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: SonarQube Report
-          body: email-body.txt
-          to: niharika.kadellabs@gmail.com
-          from: ${{ secrets.GMAIL_USER }}
-          attachments: $GITHUB_WORKSPACE/downloaded-artifacts/
+      - name: Print SonarQube Directory Contents
+        run: ls -R .scannerwork
