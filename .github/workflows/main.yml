@@ -21,6 +21,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
+      - name: Upload SonarQube Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: sonarqube-report
+          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
 
@@ -41,4 +47,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: sonarqube-report/report-task.txt
+          attachments: sonarqube-report/testing-sonar.zip
