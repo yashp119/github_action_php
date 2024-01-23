@@ -9,34 +9,39 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          EXTRA_ARGS: '-Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacoco.xml'  # Change this line based on your project setup
+
+      - name: Print SonarQube Directory Contents
+        run: ls -R /opt/sonarqube/data/governance/
 
       - name: Upload SonarQube Report
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: .scannerwork
+          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
 
-      - name: Download SonarQube Report
-        uses: actions/download-artifact@v2
-        with:
-          name: sonarqube-report
-          path: downloaded-artifacts
-
-      - name: List Downloaded Files
-        run: ls -R downloaded-artifacts
+      - name: Print Artifact Directory
+        run: ls -R /opt/sonarqube/data/governance/project_dumps/export/
 
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
+
+      - name: Download SonarQube analysis report
+        uses: actions/download-artifact@v2
+        with:
+          name: sonarqube-report
+          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -49,4 +54,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: downloaded-artifacts/*
+          attachments: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
