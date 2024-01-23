@@ -1,4 +1,4 @@
-name: Build and SonarQube Scan
+name: SonarQube Analysis
 
 on:
   push:
@@ -6,33 +6,16 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build
+  sonarqube-analysis:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Setup SonarQube Scanner
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Run SonarQube Analysis
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=testing-sonar \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=http://http://3.82.235.235:9000/ \
-            -Dsonar.login=sqp_4fc120412286d7166c7d5db5f06ea1b875aed405
 
       - name: Fetch SonarQube Analysis Details
         run: |
-          sonarAnalysisDetails=$(curl -u sqp_4fc120412286d7166c7d5db5f06ea1b875aed405: http://3.82.235.235:9000/api/issues/search?componentKeys=testing-sonar&resolved=false)
+          sonarAnalysisDetails=$(curl -u sqp_4fc120412286d7166c7d5db5f06ea1b875aed405:http://3.82.235.235:9000/api/issues/search?componentKeys=testing-sonar&resolved=false)
           echo "$sonarAnalysisDetails" > sonar-analysis-details.json
 
       - name: Parse SonarQube JSON to HTML
