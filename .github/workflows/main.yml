@@ -6,7 +6,8 @@ on:
       - master
 
 jobs:
-  sonarqube-analysis:
+  build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -21,28 +22,38 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+      - name: Run SonarQube Analysis
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=testing-sonar \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=http://http://3.82.235.235:9000/ \
+            -Dsonar.login=sqp_4fc120412286d7166c7d5db5f06ea1b875aed405
 
-    needs: sonarqube-analysis
+      - name: Fetch SonarQube Analysis Details
+        run: |
+          sonarAnalysisDetails=$(curl -u sqp_4fc120412286d7166c7d5db5f06ea1b875aed405: http://3.82.235.235:9000/api/issues/search?componentKeys=testing-sonar&resolved=false)
+          echo "$sonarAnalysisDetails" > sonar-analysis-details.json
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Parse SonarQube JSON to HTML
+        run: |
+          reportHtml='<html><body>'
+          issues=$(jq -c '.issues[]' sonar-analysis-details.json)
+          for issue in $issues; do
+            message=$(echo $issue | jq -r '.message')
+            severity=$(echo $issue | jq -r '.severity')
+            component=$(echo $issue | jq -r '.component')
+            rule=$(echo $issue | jq -r '.rule')
+            reportHtml+="<p>Issue: $message</p><p>Severity: $severity</p><p>Component: $component</p><p>Rule: $rule</p>"
+          done
+          reportHtml+='</body></html>'
+          echo "$reportHtml" > sonar-analysis-report.html
 
-      # Add your build and test steps here
-
-      - name: Create email body
-        run: echo "SonarQube report is attached" > email-body.txt
-
-      - name: Download SonarQube analysis report
-        uses: actions/download-artifact@v2
+      - name: Archive SonarQube Analysis Report
+        uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          path: sonar-analysis-report.html
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -52,7 +63,6 @@ jobs:
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
           subject: SonarQube Report
-          body: email-body.txt
-          to: niharika.kadellabs@gmail.com
-          from: ${{ secrets.GMAIL_USER }}
-          attachments: sonarqube-report/report-task.txt
+          body: 'Please find the SonarQube Analysis report attached.'
+          to: 'niharika.kadellabs@gmail.com,surajy545@gmail.com,tripathiniharika466@gmail.com'
+          attachments: sonar-analysis-report.html
