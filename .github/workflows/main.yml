@@ -38,7 +38,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE
+          path: $GITHUB_WORKSPACE/downloaded-artifacts
+
+      - name: Print Downloaded Artifact Directory
+        run: ls -R $GITHUB_WORKSPACE/downloaded-artifacts
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -51,4 +54,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: $GITHUB_WORKSPACE/
+          attachments: $GITHUB_WORKSPACE/downloaded-artifacts/
