@@ -1,4 +1,5 @@
-name: Build and SonarQube Scann
+name: Build and SonarQube Scan
+
 on:
   push:
     branches:
@@ -21,16 +22,16 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Print SonarQube Directory Contents
-        run: ls -R /opt/sonarqube/data/governance/
+        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Upload SonarQube Report
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          path: $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Print Artifact Directory
-        run: ls -R /opt/sonarqube/data/governance/project_dumps/export/
+        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
@@ -39,7 +40,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
+          path: $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -52,4 +53,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: sonarqube-report/testing-sonar.zip
+          attachments: $GITHUB_WORKSPACE/.scannerwork/
