@@ -3,7 +3,7 @@ name: Scan and Notify
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   scan-and-notify:
@@ -14,10 +14,9 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up SonarQube
-      uses: sonarsource/sonarqube-scan-action@v3
+      uses: SonarSource/sonarqube-scan-action@v2
       with:
         token: ${{ secrets.SONAR_TOKEN }}
-        scannerVersion: '4.0.0'
 
     - name: Send email notification
       uses: dawidd6/action-send-mail@v2
@@ -27,7 +26,7 @@ jobs:
         username: ${{ secrets.GMAIL_USERNAME }}
         password: ${{ secrets.GMAIL_PASSWORD }}
         subject: 'SonarQube Scan Results'
-        to: 'niharika.kadellabs@gmail.com'
+        to: 'recipient@example.com'
         body: |
           The SonarQube scan has been completed.
 
