@@ -35,5 +35,18 @@ jobs:
       - name: List Downloaded Files
         run: ls -R downloaded-artifacts
 
-      - name: Print SonarQube Directory Contents
-        run: ls -R .scannerwork
+      - name: Create email body
+        run: echo "SonarQube report is attached" > email-body.txt
+
+      - name: Send Email
+        uses: dawidd6/action-send-mail@v2
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: SonarQube Report
+          body: email-body.txt
+          to: yashpareek.amy119@gmail.com
+          from: ${{ secrets.GMAIL_USER }}
+          attachments: downloaded-artifacts/*
