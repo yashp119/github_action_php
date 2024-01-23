@@ -20,9 +20,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Set Permissions for .scannerwork
-        run: chmod -R 777 $GITHUB_WORKSPACE/.scannerwork
+          EXTRA_ARGS: '-Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacoco.xml'  # Change this line based on your project setup
 
       - name: Upload SonarQube Report
         uses: actions/upload-artifact@v2
