@@ -1,15 +1,13 @@
 name: Build, SonarQube Scan, and Email
-
 on:
   push:
     branches:
       - master
 
 jobs:
-  build-and-scan:
-    name: Build and SonarQube Scan
+  build:
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -26,13 +24,12 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: sonarqube-report
-          path: /home/runner/work/_temp/sonar-scanner/
+          path: .scannerwork/
 
-  email-report:
+  email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
-    needs: build-and-scan
-
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -41,18 +38,18 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: /home/runner/work/_temp/sonar-scanner/
+          path: .scannerwork/
 
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.GMAIL_USER }}
-          password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: 'SonarQube Report'
-          body: 'email-body.txt'  # Make sure you have the email body content ready
-          to: 'niharika.kadellabs@gmail.com'
-          from: 'yashpareek.amy119@gmail.com'
-          attachments: /home/runner/work/_temp/sonar-scanner/*
-          content_type: 'text/plain'
+          username: yashpareek.amy119@gmail.com
+          password: seoa fhxg bmcg edqj
+          subject: SonarQube Report
+          body: email-body.txt
+          to: niharika.kadellabs@gmail.com
+          from: yashpareek.amy119@gmail.com
+          attachments: .scannerwork/*
+          content_type: text/plain
