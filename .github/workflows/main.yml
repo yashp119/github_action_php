@@ -16,13 +16,15 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      # You can add your build steps here if needed
-
-      - name: Create SonarQube Analysis Report
+      - name: Build and Test
         run: |
-          # Placeholder command for creating SonarQube analysis report
-          echo "Mock SonarQube report generation step"
-          # You can replace the above line with the actual command to generate the SonarQube report
+          # Replace this command with the actual build and test command for your project
+          mvn clean install
+
+      - name: SonarQube Scan
+        run: |
+          # Replace this command with the actual SonarQube scan command for your project
+          sonar-scanner -Dsonar.projectKey=testing-sonar -Dsonar.sources=.
 
       - name: Create email body
         run: echo "SonarQube report is ready" > email-body.txt
@@ -38,5 +40,3 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-
-# You can add additional steps or jobs as needed for your specific build and deployment process
