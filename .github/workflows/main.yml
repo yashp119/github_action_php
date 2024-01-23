@@ -6,32 +6,34 @@ on:
       - master
 
 jobs:
-  build:
-    name: Build
+  sonarqube-analysis:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: SonarQube Scan
+      - name: Setup SonarQube Scanner
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: Print SonarQube Directory Contents
-        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
+  build:
+    name: Build
+    runs-on: ubuntu-latest
 
-      - name: Upload SonarQube Report
-        uses: actions/upload-artifact@v2
+    needs: sonarqube-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
-          name: sonarqube-report
-          path: $GITHUB_WORKSPACE/.scannerwork/
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Print Artifact Directory
-        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
+      # Add your build and test steps here
 
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
@@ -40,7 +42,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sonarqube-report
-          path: $GITHUB_WORKSPACE/.scannerwork/
+          path: /opt/sonarqube/data/governance/project_dumps/export/testing-sonar.zip
 
       - name: Send Email
         uses: dawidd6/action-send-mail@v2
@@ -53,4 +55,4 @@ jobs:
           body: email-body.txt
           to: niharika.kadellabs@gmail.com
           from: ${{ secrets.GMAIL_USER }}
-          attachments: $GITHUB_WORKSPACE/.scannerwork/
+          attachments: sonarqube-report/report-task.txt
