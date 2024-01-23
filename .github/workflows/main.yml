@@ -63,7 +63,7 @@ jobs:
           password: seoa fhxg bmcg edqj
           subject: SonarQube Report
           body: sonarqube-issues.html
-          to: niharika.kadellabs@gmail.com
+          to: yashpareek.amy119@gmail.com
           from: yashpareek.amy119@gmail.com
           attachments: sonarqube-issues.html
           content_type: text/html
