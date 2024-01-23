@@ -28,11 +28,11 @@ jobs:
           name: sonarqube-report
           path: $GITHUB_WORKSPACE/.scannerwork/
 
-      - name: Print Artifact Directory
-        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
-
       - name: Create email body
         run: echo "SonarQube report is attached" > email-body.txt
+
+      - name: Print Artifact Directory
+        run: ls -R $GITHUB_WORKSPACE/.scannerwork/
 
       - name: Download SonarQube analysis report
         uses: actions/download-artifact@v2
