@@ -1,14 +1,9 @@
 name: Build, SonarQube Scan, and Email
 
 on:
-  pull_request_review:
-    types:
-      - submitted
-  workflow_run:
-    workflows:
-      - "Build, SonarQube Scan, and Email"
-    types:
-      - completed
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
@@ -36,33 +31,44 @@ jobs:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     steps:
       - name: git checkout
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Your existing steps for the main job...
+          token: ${{ secrets.TOKEN }}
 
       - name: Wait for PR Approval
         id: wait_for_approval
-        run: echo "Waiting for PR approval"
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          approvals=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
 
-  wait_for_reviewer_approval:
-    name: Wait for Reviewer Approval
-    runs-on: ubuntu-latest
-    needs: main
-    if: github.event_name == 'pull_request_review'
-    steps:
-      - name: Wait for Reviewer Approval
-        id: wait_for_reviewer_approval
-        run: echo "Waiting for reviewer approval"
+          if [ -z "$approvals" ]; then
+            echo "Waiting for PR approval"
+            exit 1
+          fi
+
+      # Your existing steps for the main job...
+
+      - name: Add Reviewer
+        id: add_reviewer
+        run: |
+          response=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
+            -d '{
+                  "reviewers": ["triniha"]
+                }')
+          echo "::set-output name=response::${response}"
 
   email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
-    needs: [wait_for_reviewer_approval, build]
-    if: github.event_name == 'workflow_run' && github.event.workflow == 'Build, SonarQube Scan, and Email' && needs.wait_for_reviewer_approval.result == 'success'
+    needs: [main, build]
+    if: needs.main.outputs.wait_for_approval == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -77,6 +83,7 @@ jobs:
           curl -u "${{ secrets.SONAR_TOKEN }}:" \
             "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
             -o sonarqube-issues.json
+          
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
         with:
