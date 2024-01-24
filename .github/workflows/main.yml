@@ -1,7 +1,7 @@
 name: Build, SonarQube Scan, and Email
  
 on:
-  pull_request:
+  push:
     branches:
       - master
  
@@ -27,37 +27,10 @@ jobs:
           name: sonarqube-report
           path: .scannerwork/report-task.txt
  
-  main:
-    name: Create PR Release to Main
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
-    steps:
-      - name: git checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.TOKEN }}
- 
-      - name: Add Reviewer
-        id: add_reviewer
-        run: |
-          response=$(curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
-            -d '{
-                  "reviewers": ["triniha"]
-                }')
-          echo "::set-output name=response::${response}"
- 
-      - name: Wait for PR Approval
-        id: wait_for_approval
-        run: echo "Waiting for PR approval"
   email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
-    needs: [main, build]
-    if: ${{ needs.main.result == 'success' && needs.build.result == 'success' && needs.main.outputs.add_reviewer == '{"message":"Reviewers cannot be requested from pull requests that are already closed.","documentation_url":"https://docs.github.com/rest/reference/pulls#request-reviewers"}' }}
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -67,11 +40,14 @@ jobs:
         with:
           name: sonarqube-report
  
-      - name: Fetch SonarQube Issues
+      - name: Extract and Format SonarQube Issues
         run: |
-          curl -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
-            -o sonarqube-issues.json
+          # Parse the SonarQube JSON report and extract the required information
+          # Implement your own parsing logic here based on the structure of the JSON report
+          # Example: jq is a handy tool for JSON parsing
+ 
+          # This is just a placeholder, you need to adjust it based on the actual JSON structure
+          jq -r '.issues[] | "Issue: \(.message)\nSeverity: \(.severity)\nComponent: \(.component)\nRule: \(.rule)"' sonarqube-report > formatted-sonarqube-issues.txt
  
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
@@ -81,8 +57,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: SonarQube Report
-          body: email-body.txt
+          body: formatted-sonarqube-issues.txt
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
-          attachments: sonarqube-issues.json
-          content_type: application/json
+          content_type: text/plain  # Adjust the content type as needed
