@@ -31,7 +31,6 @@ jobs:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
     steps:
       - name: git checkout
         uses: actions/checkout@v3
@@ -61,7 +60,6 @@ jobs:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
     needs: [main, build]
-    if: ${{ needs.main.result == 'success' && needs.build.result == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -89,4 +87,4 @@ jobs:
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
           attachments: sonarqube-issues.json
-          content_type: application/json
+          content_type: application/json 
