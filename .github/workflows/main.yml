@@ -34,19 +34,17 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Request Reviewers
-        run: |
-          PR_NUMBER=$(echo "${{ github.event_path }}" | jq -r .number)
-          REPO_OWNER=$(echo "${{ github.repository }}" | cut -d / -f 1)
-          REPO_NAME=$(echo "${{ github.repository }}" | cut -d / -f 2)
-          TOKEN=${{ secrets.TOKEN }}
-
-          curl -X POST \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/requested_reviewers" \
-            -d '{
-                  "reviewers": ["triniha"]
-                }'
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const response = await github.pulls.createReviewRequest({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ["triniha"]
+            });
+            console.log(response);
 
   wait_for_review_approval:
     name: Wait for Review Approval
