@@ -27,45 +27,11 @@ jobs:
           name: sonarqube-report
           path: .scannerwork/report-task.txt
 
-  email:
-    name: Send SonarQube Report via Email
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ needs.build.result == 'success' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download SonarQube Report Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: sonarqube-report
-
-      - name: Fetch SonarQube Issues
-        run: |
-          curl -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
-            -o sonarqube-issues.json
-
-      - name: Send SonarQube Report via Email
-        uses: dawidd6/action-send-mail@v2
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: SonarQube Report
-          body: email-body.txt
-          to: ${{ secrets.EMAIL_TO }}
-          from: ${{ secrets.EMAIL_FROM }}
-          attachments: sonarqube-issues.json
-          content_type: application/json
-
   main:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
-    needs: [email]
-    if: ${{ needs.email.result == 'success' && github.event_name == 'pull_request' && github.event.action == 'opened' }}
+    needs: build
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
     steps:
       - name: git checkout
         uses: actions/checkout@v3
@@ -87,3 +53,43 @@ jobs:
       - name: Wait for PR Approval
         id: wait_for_approval
         run: echo "Waiting for PR approval"
+        
+  email:
+    name: Send SonarQube Report via Email
+    runs-on: ubuntu-latest
+    needs: [main, build]
+    if: ${{ needs.main.result == 'success' && needs.build.result == 'success' && needs.main.outputs.add_reviewer == '{"message":"Reviewers cannot be requested from pull requests that are already closed.","documentation_url":"https://docs.github.com/rest/reference/pulls#request-reviewers"}' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download SonarQube Report Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: sonarqube-report
+
+      - name: Fetch SonarQube Issues
+        run: |
+          curl -u "${{ secrets.SONAR_TOKEN }}:" \
+            "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
+            -o sonarqube-issues.json
+
+      - name: Convert SonarQube JSON to HTML
+        run: |
+          # Logic to convert sonarqube-issues.json to HTML format
+          # This step depends on the structure of sonarqube-issues.json
+          # and the desired format for the HTML report
+
+      - name: Send SonarQube Report via Email
+        uses: dawidd6/action-send-mail@v2
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: SonarQube Report
+          body: email-body.txt
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          attachments: sonarqube-report.html  # Use the converted HTML file here
+          content_type: text/html  # Set the content type accordingly
