@@ -1,9 +1,6 @@
 name: Build, SonarQube Scan, and Email
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - prod
@@ -34,11 +31,8 @@ jobs:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged) || github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
     steps:
-      - name: Placeholder Step
-        run: echo "Placeholder step to satisfy GitHub Actions requirements"
-
       - name: git checkout
         uses: actions/checkout@v3
         with:
@@ -53,10 +47,16 @@ jobs:
             -d '{
                   "reviewers": ["triniha"]
                 }'
+
+      - name: Wait for PR Approval
+        run: echo "Waiting for PR approval"
+        continue-on-error: true
+
   email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
-    needs: build
+    needs: main
+    if: ${{ needs.main.result == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -71,6 +71,7 @@ jobs:
           curl -u "${{ secrets.SONAR_TOKEN }}:" \
             "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
             -o sonarqube-issues.json
+
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
         with:
