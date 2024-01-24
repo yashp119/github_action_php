@@ -9,7 +9,7 @@ pipeline {sdffg
         EnvironmentName = "Practice-env"
         Region = "ap-south-1"
     }
-
+tyujdtyujdtytyjttu
     stages {
         stage('Build') {
             steps {
