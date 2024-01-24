@@ -1,9 +1,6 @@
 name: Build, SonarQube Scan, and Email
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -30,20 +27,11 @@ jobs:
           name: sonarqube-report
           path: .scannerwork/report-task.txt
 
-  main:
-    name: Create PR Release to Main
+  review:
+    name: Review Pull Request
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged) || github.event_name == 'push' }}
     steps:
-      - name: Placeholder Step
-        run: echo "Placeholder step to satisfy GitHub Actions requirements"
-
-      - name: git checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.TOKEN }}
-
       - name: Add Reviewer
         run: |
           curl -X POST \
@@ -54,10 +42,20 @@ jobs:
                   "reviewers": ["triniha"]
                 }'
 
+      - name: Wait for Review Approval
+        id: wait_for_review
+        run: |
+          REVIEW_STATE=""
+          while [[ "${REVIEW_STATE}" != "APPROVED" ]]; do
+            sleep 60  # Wait for a minute before checking again
+            REVIEW_STATE=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" | jq -r '.[] | select(.user.login == "triniha") | .state')
+          done
+        shell: bash
+
   email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
-    needs: build
+    needs: review
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
