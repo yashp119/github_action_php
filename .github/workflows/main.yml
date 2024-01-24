@@ -3,7 +3,7 @@ name: Build and Merge
 on:
   pull_request:
     branches:
-      - main
+      - master
  
 jobs:
   build:
