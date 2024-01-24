@@ -33,16 +33,21 @@ jobs:
     needs: build
     if: github.event_name == 'pull_request'
     steps:
+      - name: Fetch Reviewers
+        run: |
+          curl -sSL "https://raw.githubusercontent.com/${{ github.repository }}/main/reviewers.txt" > reviewers.txt
+
       - name: Request Reviewers
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const reviewers = require('./reviewers.txt').trim().split('\n');
             const response = await github.pulls.createReviewRequest({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
-              reviewers: ["triniha"]
+              reviewers: reviewers
             });
             console.log(response);
 
@@ -57,11 +62,29 @@ jobs:
         run: echo "Waiting for review approval..."
         timeout-minutes: 60
 
-  email:
-    name: Send SonarQube Report via Email
+  merge_on_approval:
+    name: Merge on Review Approval
     runs-on: ubuntu-latest
     needs: [wait_for_review_approval]
     if: github.event_name == 'pull_request' && steps.wait_for_approval.outputs.result == 'success'
+    steps:
+      - name: Merge on Review Approval
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const response = await github.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            console.log(response);
+
+  email:
+    name: Send SonarQube Report via Email
+    runs-on: ubuntu-latest
+    needs: [merge_on_approval]
+    if: github.event_name == 'pull_request' && steps.merge_on_approval.outputs.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
