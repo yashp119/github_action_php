@@ -1,7 +1,7 @@
 pipeline {sdffg
     agent anyyyyyyy
     
-    environment {
+    environment {fdgdfgdf
         BuildName = "version-${BUILD_NUMBER}"
         BucketName = "yashbucketdhhffh"
         BucketKey = "S3-builds-Storage"
