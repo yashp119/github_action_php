@@ -31,7 +31,7 @@ jobs:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: ${{ needs.build.result == 'success' }}
     steps:
       - name: git checkout
         uses: actions/checkout@v3
@@ -49,8 +49,6 @@ jobs:
             echo "Waiting for PR approval"
             exit 1
           fi
-
-      # Your existing steps for the main job...
 
       - name: Add Reviewer
         id: add_reviewer
