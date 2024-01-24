@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent anyyyyyyy
     
     environment {
         BuildName = "version-${BUILD_NUMBER}"
