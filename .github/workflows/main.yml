@@ -3,7 +3,7 @@ name: Build, SonarQube Scan, and Email
 on:
   pull_request:
     branches:
-      - prod
+      - master
 
 jobs:
   build:
