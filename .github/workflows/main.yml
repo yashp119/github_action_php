@@ -74,6 +74,9 @@ jobs:
           curl -u "${{ secrets.SONAR_TOKEN }}:" \
             "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
             -o sonarqube-issues.json
+            
+          # Parse the JSON response and create an HTML report
+          jq -r '.issues[] | "Issue: \(.message)\nSeverity: \(.severity)\nComponent: \(.component)\nRule: \(.rule)\n\n"' sonarqube-issues.json > sonarqube-issues.html
           
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
@@ -83,7 +86,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: SonarQube Report
-          body: email-body.txt
+          body: sonarqube-issues.html
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
           attachments: sonarqube-issues.json
