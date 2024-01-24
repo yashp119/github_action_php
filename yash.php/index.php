@@ -7,7 +7,7 @@
 
 <?php
 // This is a PHP comment
-echo "Hello, world! Today is " . date("Y-m-d") . "<br>";
+echo "Hello, world! Today is " . date("Y-m-d") . "<br>";dfgfjhtdryxhtdgbxfhtra
 
 // Displaying a variable
 $name = "John Doe";
