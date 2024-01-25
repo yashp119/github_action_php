@@ -1,15 +1,15 @@
 pipeline {sdffg
     agent anyyyyyyy
     
-    environment {
+    environment {fdgdfgdf
         BuildName = "version-${BUILD_NUMBER}"
         BucketName = "yashbucketdhhffh"
-        BucketKey = "S3-builds-Storage"
+        BucketKey = "S3-builds-Storage"vcbnbxbc
         ApplicationName = "practice"
         EnvironmentName = "Practice-env"
         Region = "ap-south-1"
     }
-tyujdtyujdtytyjttu
+tyujdtyujdtytyjttucghjghjcn
     stages {
         stage('Build') {
             steps {

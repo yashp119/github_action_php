@@ -7,7 +7,7 @@ dfgfdggfg
  * laravel-dbsim - A handy app to write expressions with the Laravel query
  * builder, and see the generated SQL. This is a personal tool - don't place it
  * where evil people can get their hands on it; there's not protection from
- * code injections.
+ * code injections.fghdhjdtjktdy
  * 
  * @author Connor Peet <connor@peet.io>
  * @copyright 2014 Connor Peet
