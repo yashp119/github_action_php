@@ -41,13 +41,23 @@ jobs:
         id: wait_for_approval
         run: |
           pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          approvals=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
+          
+          # Wait for the required checks to pass
+          while true; do
+            check_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build")
+            
+            approval_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
 
-          if [ $(echo "$approvals" | jq length) -eq 0 ]; then
-            echo "Waiting for PR approval"
-            exit 1
-          fi
+            if [ $(echo "$check_status" | jq '.total_count') -gt 0 ] && [ -n "$approval_status" ]; then
+              echo "PR is approved and checks passed."
+              break
+            fi
+
+            echo "Waiting for PR approval and checks to pass..."
+            sleep 30  # Wait for 30 seconds before checking again
+          done
 
       - name: Add Reviewer
         id: add_reviewer
