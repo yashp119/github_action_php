@@ -31,12 +31,23 @@ jobs:
     name: Create PR Release to Main
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
     steps:
       - name: git checkout
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.TOKEN }}
+
+      - name: Wait for PR Approval
+        id: wait_for_approval
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          approvals=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
+
+          if [ -n "$approvals" ]; then
+            echo "Waiting for PR approval"
+            exit 1
+          fi
 
       - name: Add Reviewer
         id: add_reviewer
@@ -50,15 +61,11 @@ jobs:
                 }')
           echo "::set-output name=response::${response}"
 
-      - name: Wait for PR Approval
-        id: wait_for_approval
-        run: echo "Waiting for PR approval"
-        
   email:
     name: Send SonarQube Report via Email
     runs-on: ubuntu-latest
     needs: [main, build]
-    if: ${{ needs.main.result == 'success' && needs.build.result == 'success' && needs.main.outputs.add_reviewer }}
+    if: needs.main.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -73,6 +80,12 @@ jobs:
           curl -u "${{ secrets.SONAR_TOKEN }}:" \
             "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
             -o sonarqube-issues.json
+          
+      - name: Convert SonarQube Report to HTML
+        run: |
+          echo '<html><body>' > sonarqube-issues.html
+          jq -r '.issues[] | "<p>Issue: " + .message + "</p><p>Severity: " + .severity + "</p><p>Component: " + .component + "</p><p>Rule: " + .rule + "</p>"' sonarqube-issues.json >> sonarqube-issues.html
+          echo '</body></html>' >> sonarqube-issues.html
 
       - name: Send SonarQube Report via Email
         uses: dawidd6/action-send-mail@v2
@@ -82,8 +95,8 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: SonarQube Report
-          body: email-body.txt
+          body: sonarqube-issues.html
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_FROM }}
           attachments: sonarqube-issues.json
-          content_type: application/json
+          content_type: text/html
