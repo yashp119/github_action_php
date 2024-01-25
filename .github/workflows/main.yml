@@ -44,7 +44,7 @@ jobs:
           approvals=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
 
-          if [ -n "$approvals" ]; then
+          if [ $(echo "$approvals" | jq length) -eq 0 ]; then
             echo "Waiting for PR approval"
             exit 1
           fi
