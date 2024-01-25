@@ -54,10 +54,12 @@ jobs:
           # Wait for the required checks to pass
           retries=3
           while [ $retries -gt 0 ]; do
-            check_status=$(gh pr checks $pr_number --json name,state --jq '.checks[] | select(.name == "ci/circleci: build" and .state == "success")')
+            check_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build" | jq '.check_runs[] | select(.conclusion == "success")')
             echo "Check Status: $check_status"
 
-            approval_status=$(gh pr review-list $pr_number --json user,state --jq '.reviews[] | select(.state == "APPROVED")')
+            approval_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
             echo "Approval Status: $approval_status"
 
             if [ -n "$check_status" ] && [ -n "$approval_status" ]; then
