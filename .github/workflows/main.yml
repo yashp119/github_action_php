@@ -10,6 +10,13 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt-get update
+          sudo apt-get install gh
+
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -46,15 +53,13 @@ jobs:
           # Wait for the required checks to pass
           retries=3
           while [ $retries -gt 0 ]; do
-            check_status=$(curl -v -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build")
+            check_status=$(gh pr checks $pr_number --json name,state --jq '.checks[] | select(.name == "ci/circleci: build" and .state == "success")')
             echo "Check Status: $check_status"
 
-            approval_status=$(curl -v -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
+            approval_status=$(gh pr review-list $pr_number --json user,state --jq '.reviews[] | select(.state == "APPROVED")')
             echo "Approval Status: $approval_status"
 
-            if [ $(echo "$check_status" | jq '.total_count') -gt 0 ] && [ -n "$approval_status" ]; then
+            if [ -n "$check_status" ] && [ -n "$approval_status" ]; then
               echo "PR is approved and checks passed."
               break
             fi
@@ -72,13 +77,7 @@ jobs:
       - name: Add Reviewer
         id: add_reviewer
         run: |
-          response=$(curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
-            -d '{
-                  "reviewers": ["triniha"]
-                }')
+          response=$(gh pr request-reviewer $pr_number --reviewer triniha)
           echo "::set-output name=response::${response}"
 
   email:
