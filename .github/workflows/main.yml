@@ -41,14 +41,17 @@ jobs:
         id: wait_for_approval
         run: |
           pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          
+          echo "PR Number: $pr_number"
+
           # Wait for the required checks to pass
           while true; do
-            check_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+            check_status=$(curl -v -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build")
-            
-            approval_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
+            echo "Check Status: $check_status"
+
+            approval_status=$(curl -v -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
+            echo "Approval Status: $approval_status"
 
             if [ $(echo "$check_status" | jq '.total_count') -gt 0 ] && [ -n "$approval_status" ]; then
               echo "PR is approved and checks passed."
