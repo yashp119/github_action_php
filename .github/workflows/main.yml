@@ -44,7 +44,8 @@ jobs:
           echo "PR Number: $pr_number"
 
           # Wait for the required checks to pass
-          while true; do
+          retries=3
+          while [ $retries -gt 0 ]; do
             check_status=$(curl -v -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build")
             echo "Check Status: $check_status"
@@ -60,7 +61,13 @@ jobs:
 
             echo "Waiting for PR approval and checks to pass..."
             sleep 30  # Wait for 30 seconds before checking again
+            ((retries--))
           done
+
+          if [ $retries -eq 0 ]; then
+            echo "Maximum retries reached. Exiting with failure."
+            exit 1
+          fi
 
       - name: Add Reviewer
         id: add_reviewer
