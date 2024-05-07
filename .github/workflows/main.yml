@@ -1,124 +1,26 @@
-name: Build, SonarQube Scan, and Email
+name: Build
 
 on:
-  pull_request:
+  push:
     branches:
       - master
+
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-          sudo mkdir -p /usr/local/bin
-          sudo curl -Lo /usr/local/bin/gh https://github.com/cli/cli/releases/latest/download/gh_linux_amd64
-          sudo chmod +x /usr/local/bin/gh
-
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
-
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@master
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Upload SonarQube Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: sonarqube-report
-          path: .scannerwork/report-task.txt
-
-  main:
-    name: Create PR Release to Main
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: git checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.TOKEN }}
-
-      - name: Wait for PR Approval
-        id: wait_for_approval
-        run: |
-          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          echo "PR Number: $pr_number"
-
-          # Wait for the required checks to pass
-          retries=3
-          while [ $retries -gt 0 ]; do
-            check_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/check-runs?check_name=ci/circleci: build" | jq '.check_runs[] | select(.conclusion == "success")')
-            echo "Check Status: $check_status"
-
-            approval_status=$(curl -s -H "Authorization: Bearer ${{ secrets.TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${pr_number}/reviews" | jq '.[] | select(.state == "APPROVED")')
-            echo "Approval Status: $approval_status"
-
-            if [ -n "$check_status" ] && [ -n "$approval_status" ]; then
-              echo "PR is approved and checks passed."
-              break
-            fi
-
-            echo "Waiting for PR approval and checks to pass..."
-            sleep 30  # Wait for 30 seconds before checking again
-            ((retries--))
-          done
-
-          if [ $retries -eq 0 ]; then
-            echo "Maximum retries reached. Exiting with failure."
-            exit 1
-          fi
-
-      - name: Add Reviewer
-        id: add_reviewer
-        run: |
-          response=$(gh pr request-reviewer $pr_number --reviewer triniha)
-          echo "::set-output name=response::${response}"
-
-  email:
-    name: Send SonarQube Report via Email
-    runs-on: ubuntu-latest
-    needs: [main, build]
-    if: needs.main.result == 'success'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download SonarQube Report Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: sonarqube-report
-
-      - name: Fetch SonarQube Issues
-        run: |
-          curl -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/issues/search?componentKeys=testing-sonar&resolved=false" \
-            -o sonarqube-issues.json
-          
-      - name: Convert SonarQube Report to HTML
-        run: |
-          echo '<html><body>' > sonarqube-issues.html
-          jq -r '.issues[] | "<p>Issue: " + .message + "</p><p>Severity: " + .severity + "</p><p>Component: " + .component + "</p><p>Rule: " + .rule + "</p>"' sonarqube-issues.json >> sonarqube-issues.html
-          echo '</body></html>' >> sonarqube-issues.html
-
-      - name: Send SonarQube Report via Email
-        uses: dawidd6/action-send-mail@v2
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: SonarQube Report
-          body: sonarqube-issues.html
-          to: ${{ secrets.EMAIL_TO }}
-          from: ${{ secrets.EMAIL_FROM }}
-          attachments: sonarqube-issues.json
-          content_type: text/html
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # - uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
